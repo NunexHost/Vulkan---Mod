@@ -44,7 +44,7 @@ public class DrawBuffers {
     public void allocateBuffers() {
 //        getActiveLayers().forEach(t -> areaBufferTypes.put(t, new AreaBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, t.initialSize, VERTEX_SIZE)));
 //        this.indexBuffer = new AreaBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 1000000, INDEX_SIZE);
-        if(!Initializer.CONFIG.perRenderTypeAreaBuffers) vertexBuffer = new AreaBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 1048576, VERTEX_SIZE);
+        if(!Initializer.CONFIG.perRenderTypeAreaBuffers) vertexBuffer = new AreaBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 2097152, VERTEX_SIZE);
 
         this.allocated = true;
     }
