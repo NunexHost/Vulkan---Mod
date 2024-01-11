@@ -1,13 +1,9 @@
-package net.vulkanmod.vulkan.memory;
-
-import net.vulkanmod.render.chunk.util.Util;
 import net.vulkanmod.vulkan.util.VUtil;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.libc.LibCString.nmemcpy;
+import org.lwjgl.vulkan.VK10.*;
 
 import java.nio.ByteBuffer;
-
-import static org.lwjgl.system.libc.LibCString.nmemcpy;
-import static org.lwjgl.vulkan.VK10.*;
 
 public class StagingBuffer extends Buffer {
 
@@ -20,18 +16,16 @@ public class StagingBuffer extends Buffer {
     }
 
     public void copyBuffer(int size, ByteBuffer byteBuffer) {
-
         if(size > this.bufferSize - this.usedBytes) {
             resizeBuffer((this.bufferSize + size) * 2);
         }
 
-//        VUtil.memcpy(byteBuffer, this.data.getByteBuffer(0, this.bufferSize), this.usedBytes);
-        nmemcpy(this.data.get(0) + this.usedBytes, MemoryUtil.memAddress(byteBuffer), size);
+        for (int i = 0; i < size; i++) {
+            nmemcpy(this.data.get(0) + this.usedBytes + i * MemoryUtil.SIZE_OF_INT, MemoryUtil.memAddress(byteBuffer).add(i * MemoryUtil.SIZE_OF_INT), MemoryUtil.SIZE_OF_INT);
+        }
 
         offset = usedBytes;
         usedBytes += size;
-
-        //createVertexBuffer(vertexSize, vertexCount, byteBuffer);
     }
 
     public void align(int alignment) {
