@@ -3,10 +3,11 @@ package net.vulkanmod.vulkan.memory;
 import net.vulkanmod.render.chunk.util.Util;
 import net.vulkanmod.vulkan.util.VUtil;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.system.libc.LibCString.nmemcpy;
-import org.lwjgl.vulkan.VK10.*;
 
 import java.nio.ByteBuffer;
+
+import static org.lwjgl.system.libc.LibCString.nmemcpy;
+import static org.lwjgl.vulkan.VK10.*;
 
 public class StagingBuffer extends Buffer {
 
