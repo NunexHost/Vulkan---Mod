@@ -1,3 +1,6 @@
+package net.vulkanmod.vulkan.memory;
+
+import net.vulkanmod.render.chunk.util.Util;
 import net.vulkanmod.vulkan.util.VUtil;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.libc.LibCString.nmemcpy;
