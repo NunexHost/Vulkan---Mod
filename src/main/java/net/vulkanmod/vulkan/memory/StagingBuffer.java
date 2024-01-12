@@ -20,16 +20,18 @@ public class StagingBuffer extends Buffer {
     }
 
     public void copyBuffer(int size, ByteBuffer byteBuffer) {
+
         if(size > this.bufferSize - this.usedBytes) {
             resizeBuffer((this.bufferSize + size) * 2);
         }
 
-        for (int i = 0; i < size; i++) {
-            nmemcpy(this.data.get(0) + this.usedBytes + i * MemoryUtil.SIZE_OF_INT, MemoryUtil.memAddress(byteBuffer).add(i * MemoryUtil.SIZE_OF_INT), MemoryUtil.SIZE_OF_INT);
-        }
+//        VUtil.memcpy(byteBuffer, this.data.getByteBuffer(0, this.bufferSize), this.usedBytes);
+        nmemcpy(this.data.get(0) + this.usedBytes, MemoryUtil.memAddress(byteBuffer), size);
 
         offset = usedBytes;
         usedBytes += size;
+
+        //createVertexBuffer(vertexSize, vertexCount, byteBuffer);
     }
 
     public void align(int alignment) {
