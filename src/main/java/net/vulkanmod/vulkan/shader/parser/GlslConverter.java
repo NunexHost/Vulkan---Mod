@@ -6,162 +6,72 @@ import net.vulkanmod.vulkan.shader.descriptor.UBO;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GlslConverter {
 
-//    private Queue<Integer> stack = new ArrayDeque<>();
-    private int count;
-    ShaderStage shaderStage;
-    private State state;
+    private final Pattern uniformPattern = Pattern.compile("uniform ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+) (.*)");
+    private final Pattern inOutPattern = Pattern.compile("(in|out) ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+) (.*)");
 
-    private UniformParser uniformParser;
-    private InputOutputParser inOutParser;
-
-    private String vshConverted;
-    private String fshConverted;
+    private UBO uniformBlock;
+    private List<ImageDescriptor> samplerList;
 
     public void process(VertexFormat vertexFormat, String vertShader, String fragShader) {
-        this.uniformParser = new UniformParser(this);
-        this.inOutParser = new InputOutputParser(this, vertexFormat);
+        this.uniformBlock = new UBO();
+        this.samplerList = new ArrayList<>();
 
-        StringBuilder vshOut = new StringBuilder();
-        StringBuilder fshOut = new StringBuilder();
+        // TODO: version
 
-        this.setShaderStage(ShaderStage.Vertex);
-
-        String[] lines = vertShader.split("\n");
-
-        var iterator = Arrays.stream(lines).iterator();
-
-        //TODO version
-        while (iterator.hasNext()) {
-            String line = iterator.next();
-
-            String parsedLine = this.parseLine(line);
-            if(parsedLine != null) {
-                vshOut.append(parsedLine);
-                vshOut.append("\n");
-            }
-
-        }
-
-        vshOut.insert(0, this.inOutParser.createInOutCode());
-
-        this.setShaderStage(ShaderStage.Fragment);
-
-        lines = fragShader.split("\n");
-
-        iterator = Arrays.stream(lines).iterator();
-
-        while (iterator.hasNext()) {
-            String line = iterator.next();
-
-            String parsedLine = this.parseLine(line);
-            if(parsedLine != null) {
-                fshOut.append(parsedLine);
-                fshOut.append("\n");
+        for (String line : vertShader.split("\n")) {
+            if (parseLine(line) != null) {
+                continue;
             }
         }
 
-        fshOut.insert(0, this.inOutParser.createInOutCode());
-
-        String uniformBlock = this.uniformParser.createUniformsCode();
-        vshOut.insert(0, uniformBlock);
-        fshOut.insert(0, uniformBlock);
-
-        String samplersVertCode = this.uniformParser.createSamplersCode(ShaderStage.Vertex);
-        String samplersFragCode = this.uniformParser.createSamplersCode(ShaderStage.Fragment);
-
-        vshOut.insert(0, samplersVertCode);
-        fshOut.insert(0, samplersFragCode);
-
-        vshOut.insert(0, "#version 450\n\n");
-        fshOut.insert(0, "#version 450\n\n");
-
-        //TODO check
-        //TODO ubo
-        this.vshConverted = vshOut.toString();
-        this.fshConverted = fshOut.toString();
-
+        for (String line : fragShader.split("\n")) {
+            if (parseLine(line) != null) {
+                continue;
+            }
+        }
     }
 
     private String parseLine(String line) {
+        Matcher matcher;
 
-        StringTokenizer tokenizer = new StringTokenizer(line);
+        if (matcher = uniformPattern.matcher(line)) {
+            String type = matcher.group(1);
+            String name = matcher.group(2);
+            String value = matcher.group(3);
 
-        //empty line
-        if(!tokenizer.hasMoreTokens()) return null;
+            // TODO: parse type
 
-        String token = tokenizer.nextToken();
+            uniformBlock.addUniform(name, value);
+            return null;
+        } else if (matcher = inOutPattern.matcher(line)) {
+            String direction = matcher.group(1);
+            String type = matcher.group(2);
+            String name = matcher.group(3);
 
-        if(token.matches("uniform")) {
-            this.state = State.MATCHING_UNIFORM;
-        }
-        else if(token.matches("in")) {
-            this.state = State.MATCHING_IN_OUT;
-        }
-        else if(token.matches("out")) {
-            this.state = State.MATCHING_IN_OUT;
-        }
-        else if(token.matches("#version")) {
+            // TODO: parse type
+
+            if (direction.equals("in")) {
+                // TODO: parse vertex attributes
+            } else {
+                // TODO: parse fragment attributes
+            }
+
             return null;
         }
-        else {
-            return line;
-        }
 
-        if(tokenizer.countTokens() < 2) {
-            throw new IllegalArgumentException("Less than 3 tokens present");
-        }
-
-        feedToken(token);
-
-        while (tokenizer.hasMoreTokens()) {
-            token = tokenizer.nextToken();
-
-            feedToken(token);
-        }
-
-        return null;
-    }
-
-    private void feedToken(String token) {
-        switch (this.state) {
-            case MATCHING_UNIFORM -> this.uniformParser.parseToken(token);
-            case MATCHING_IN_OUT -> this.inOutParser.parseToken(token);
-        }
-    }
-
-    private void setShaderStage(ShaderStage shaderStage) {
-        this.shaderStage = shaderStage;
-        this.uniformParser.setCurrentUniforms(this.shaderStage);
-        this.inOutParser.setShaderStage(this.shaderStage);
+        return line;
     }
 
     public UBO getUBO() {
-        return this.uniformParser.getUbo();
+        return uniformBlock;
     }
 
     public List<ImageDescriptor> getSamplerList() {
-        return this.uniformParser.getSamplers();
-    }
-
-    public String getVshConverted() {
-        return vshConverted;
-    }
-
-    public String getFshConverted() {
-        return fshConverted;
-    }
-
-    enum ShaderStage {
-        Vertex,
-        Fragment
-    }
-
-    enum State {
-        MATCHING_UNIFORM,
-        MATCHING_IN_OUT
+        return samplerList;
     }
 }
